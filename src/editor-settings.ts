@@ -214,13 +214,17 @@ function addEditorSettings (toggleButton: HTMLElement, editor: HTMLElement) {
 
 	const aceEditor = window.ace.edit(editor);
 	const currentOptions = loadOptions() as any; // tslint:disable-line
+	// Although `aceEditor.getOptions` doesn't require a parameter, if none is
+	// given it logs warnings about "foldStyle" options it thinks it has but
+	// doesn't
+	const optionsNames = Object.keys(DEFAULT_SETTINGS) as Array<keyof EditorOptions>;
 
 	// There doesn't seem to be a way to listen to when options are set from
 	// the external settings menu, so we have to do this
 	const _setOption = aceEditor.setOption.bind(aceEditor);
 	aceEditor.setOption = function (option: string, value: ACE_OPTION) {
 		_setOption.call(null, option, value);
-		window.localStorage.kaeEditorSettings = JSON.stringify(aceEditor.getOptions());
+		window.localStorage.kaeEditorSettings = JSON.stringify(aceEditor.getOptions(optionsNames));
 	};
 
 	let toggledOn = false;
@@ -253,7 +257,7 @@ function addEditorSettings (toggleButton: HTMLElement, editor: HTMLElement) {
 			_setOption(option, value);
 		}
 
-		window.localStorage.kaeEditorSettings = JSON.stringify(aceEditor.getOptions());
+		window.localStorage.kaeEditorSettings = JSON.stringify(aceEditor.getOptions(optionsNames));
 	}
 
 	function createContainer () {

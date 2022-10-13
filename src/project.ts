@@ -122,7 +122,7 @@ async function addEditorSettingsButton () {
 	const editor = await querySelectorPromise(".scratchpad-ace-editor") as HTMLElement;
 
 	const ace = window.ace;
-	ace.config.set("basePath", `https://cdn.jsdelivr.net/gh/ajaxorg/ace-builds@1.1.4/src-min-noconflict/`);
+	ace.config.set("basePath", "https://cdn.jsdelivr.net/gh/ajaxorg/ace-builds@1.1.4/src-min-noconflict/");
 
 	if (!ace.require("ace/ext/language_tools")) {
 		throw new Error("KA removed ace language tools.");

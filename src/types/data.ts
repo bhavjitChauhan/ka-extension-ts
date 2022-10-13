@@ -240,7 +240,7 @@ interface ACE {
 	edit: (e: HTMLElement) => {
 		setOptions: (o: EditorOptions) => void;
 		setOption: (o: string, val: ACE_OPTION) => void;
-		getOptions: () => EditorOptions;
+		getOptions: (optionNames?: Array<keyof EditorOptions>) => Partial<EditorOptions>;
 		getSession: () => {
 			getMode: () => {
 				$id: string;

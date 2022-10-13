@@ -1,4 +1,4 @@
-import { ACE_OPTION, EditorOptions } from "./types/data";
+import { ACE_OPTION, EditorOptions, Program } from "./types/data";
 
 const DEFAULT_SETTINGS = {
 	"selectionStyle": "line",
@@ -37,7 +37,7 @@ const DEFAULT_SETTINGS = {
 	"useSoftTabs": true,
 	"tabSize": 4,
 	"wrap": "free",
-	"mode": "ace/mode/javascript",
+	"mode": "ace/mode/text",
 	"enableMultiselect": true,
 	"enableBasicAutocompletion": false,
 	"enableLiveAutocompletion": false,
@@ -189,11 +189,15 @@ const POSSIBLE_OPTIONS: { [key: string]: Option } = {
 
 let editorSettingsCount = 0; //Used to give each instance an index, so that element id's don't conflict
 
-function loadOptions (): EditorOptions {
+function loadOptions (programType?: string): EditorOptions {
+	if (programType) { programType = getAcceptedProgramType(programType); }
 	try {
-		return JSON.parse(window.localStorage.kaeEditorSettings) as EditorOptions;
+		return JSON.parse(window.localStorage[`kaeEditorSettings-${programType}`]) as EditorOptions;
 	} catch (e) {
-		return DEFAULT_SETTINGS;
+		return {
+			...DEFAULT_SETTINGS,
+			mode: programType ? getEditorMode(programType) : DEFAULT_SETTINGS.mode
+		};
 	}
 }
 
@@ -203,17 +207,47 @@ function checkSettingsDark (): boolean {
 	return theme !== undefined && darkThemes.includes(theme);
 }
 
+// The `userAuthoredContentType` property of a program can be set to an
+// arbitrary string by the user via the API, so we don't want to use it
+// directly
+function getAcceptedProgramType (programType: string) {
+	const ACCEPTED_PROGRAM_TYPES = ["pjs", "webpage", "sql"];
+	if (ACCEPTED_PROGRAM_TYPES.includes(programType)) {
+		return programType;
+	}
+	return "other";
+}
+
+function getEditorMode (programType: string) {
+	let editorMode;
+	switch (programType) {
+		case "pjs":
+			editorMode = "javascript";
+			break;
+		case "webpage":
+			editorMode = "html";
+			break;
+		case "sql":
+			editorMode = "sql";
+			break;
+		default:
+			editorMode = "text";
+	}
+	return `ace/mode/${editorMode}`;
+}
+
 /* This whole function should probably be refactored at some point,
 	there are more than a few implicit `any`s */
-function addEditorSettings (toggleButton: HTMLElement, editor: HTMLElement) {
+function addEditorSettings (toggleButton: HTMLElement, editor: HTMLElement, program: Program) {
 	if (document.getElementById("kae-toggle-editor-settings")) {
 		return;
 	}
 
+	const programType = getAcceptedProgramType(program.userAuthoredContentType);
 	const editorSettingsId = editorSettingsCount++;
 
 	const aceEditor = window.ace.edit(editor);
-	const currentOptions = loadOptions() as any; // tslint:disable-line
+	const currentOptions = loadOptions(programType) as any; // tslint:disable-line
 	// Although `aceEditor.getOptions` doesn't require a parameter, if none is
 	// given it logs warnings about "foldStyle" options it thinks it has but
 	// doesn't
@@ -224,7 +258,7 @@ function addEditorSettings (toggleButton: HTMLElement, editor: HTMLElement) {
 	const _setOption = aceEditor.setOption.bind(aceEditor);
 	aceEditor.setOption = function (option: string, value: ACE_OPTION) {
 		_setOption.call(null, option, value);
-		window.localStorage.kaeEditorSettings = JSON.stringify(aceEditor.getOptions(optionsNames));
+		window.localStorage[`kaeEditorSettings-${programType}`] = JSON.stringify(aceEditor.getOptions(optionsNames));
 	};
 
 	let toggledOn = false;
@@ -257,7 +291,7 @@ function addEditorSettings (toggleButton: HTMLElement, editor: HTMLElement) {
 			_setOption(option, value);
 		}
 
-		window.localStorage.kaeEditorSettings = JSON.stringify(aceEditor.getOptions(optionsNames));
+		window.localStorage[`kaeEditorSettings-${programType}`] = JSON.stringify(aceEditor.getOptions(optionsNames));
 	}
 
 	function createContainer () {

@@ -1,15 +1,48 @@
 import { ACE_OPTION, EditorOptions } from "./types/data";
 
 const DEFAULT_SETTINGS = {
-	fontFamily: "'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace",
-	showInvisibles: false,
-	tabSize: 4,
-	theme: "ace/theme/textmate",
-	useSoftTabs: true,
-	wrap: true,
-	useWorker: false,
-	behavioursEnabled: true,
-	wrapBehavioursEnabled: false,
+	"selectionStyle": "line",
+	"highlightActiveLine": false,
+	"highlightSelectedWord": false,
+	"readOnly": false,
+	"cursorStyle": "ace",
+	"mergeUndoDeltas": true,
+	"behavioursEnabled": true,
+	"wrapBehavioursEnabled": true,
+	"hScrollBarAlwaysVisible": false,
+	"vScrollBarAlwaysVisible": false,
+	"highlightGutterLine": true,
+	"animatedScroll": false,
+	"showInvisibles": false,
+	"showPrintMargin": false,
+	"printMarginColumn": 80,
+	"printMargin": false,
+	"fadeFoldWidgets": false,
+	"showFoldWidgets": true,
+	"showLineNumbers": true,
+	"showGutter": true,
+	"displayIndentGuides": true,
+	"fontSize": "14px",
+	"scrollPastEnd": 0,
+	"theme": "ace/theme/textmate",
+	"scrollSpeed": 2,
+	"dragDelay": 0,
+	"dragEnabled": true,
+	"focusTimout": 0,
+	"tooltipFollowsMouse": true,
+	"firstLineNumber": 1,
+	"overwrite": false,
+	"newLineMode": "auto",
+	"useWorker": false,
+	"useSoftTabs": true,
+	"tabSize": 4,
+	"wrap": "free",
+	"mode": "ace/mode/javascript",
+	"enableMultiselect": true,
+	"enableBasicAutocompletion": false,
+	"enableLiveAutocompletion": false,
+	"enableSnippets": false,
+	"fontFamily": "'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace"
 } as EditorOptions;
 
 interface Option {
@@ -182,6 +215,14 @@ function addEditorSettings (toggleButton: HTMLElement, editor: HTMLElement) {
 	const aceEditor = window.ace.edit(editor);
 	const currentOptions = loadOptions() as any; // tslint:disable-line
 
+	// There doesn't seem to be a way to listen to when options are set from
+	// the external settings menu, so we have to do this
+	const _setOption = aceEditor.setOption.bind(aceEditor);
+	aceEditor.setOption = function (option: string, value: ACE_OPTION) {
+		_setOption.call(null, option, value);
+		window.localStorage.kaeEditorSettings = JSON.stringify(aceEditor.getOptions());
+	};
+
 	let toggledOn = false;
 	const container = createContainer();
 
@@ -197,8 +238,8 @@ function addEditorSettings (toggleButton: HTMLElement, editor: HTMLElement) {
 			const options = option.split(" ");
 
 			for (let i = 0; i < values.length; i++) {
-				aceEditor.setOption(options[i], values[i] === "true");
-				currentOptions[options[i]] = values[i] === "true";
+				// Use original `setOption` to avoid unnecessarily saving to localStorage
+				_setOption(options[i], values[i] === "true");
 			}
 		} else {
 			let value = this.value as ACE_OPTION;
@@ -208,12 +249,11 @@ function addEditorSettings (toggleButton: HTMLElement, editor: HTMLElement) {
 				value = value === "true";
 			}
 
-			aceEditor.setOption(option, value);
-
-			currentOptions[option] = value;
+			// Use original `setOption` to avoid unnecessarily saving to localStorage
+			_setOption(option, value);
 		}
 
-		window.localStorage.kaeEditorSettings = JSON.stringify(currentOptions);
+		window.localStorage.kaeEditorSettings = JSON.stringify(aceEditor.getOptions());
 	}
 
 	function createContainer () {

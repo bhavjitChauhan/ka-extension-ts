@@ -122,10 +122,7 @@ async function addEditorSettingsButton () {
 	const editor = await querySelectorPromise(".scratchpad-ace-editor") as HTMLElement;
 
 	const ace = window.ace;
-
-	const extScriptEl = document.getElementById("ka-extension-script") as HTMLScriptElement;
-	const extId = extScriptEl.src.split("/")[2];
-	ace.config.set("basePath", `chrome-extension://${extId}/styles/ace-themes/`);
+	ace.config.set("basePath", `https://cdn.jsdelivr.net/gh/ajaxorg/ace-builds@1.1.4/src-min-noconflict/`);
 
 	if (!ace.require("ace/ext/language_tools")) {
 		throw new Error("KA removed ace language tools.");
@@ -144,6 +141,7 @@ async function addEditorSettingsButton () {
 
 	function repos () {
 		const pos = innerButtonLink.getBoundingClientRect();
+		if (!editorSettings) { return; }
 		editorSettings.style.left = pos.left + pageXOffset + "px";
 		editorSettings.style.top = pos.top + pageYOffset - 10 + "px";
 	}
@@ -157,7 +155,7 @@ async function addEditorSettingsButton () {
 	}
 	errorBuddyWrap.parentNode!.insertBefore(innerButtonLink, errorBuddyWrap);
 
-	document.body.appendChild(editorSettings);
+	if (editorSettings) { document.body.appendChild(editorSettings); }
 
 	const editorWrap = document.querySelector(".scratchpad-editor-wrap");
 	if (editorWrap && editorWrap.parentElement) {

@@ -193,20 +193,54 @@ interface ScratchpadUI {
 
 interface EditorOptions {
 	fontFamily: string;
-	showInvisibles: boolean;
-	tabSize: number;
-	theme: string;
-	useSoftTabs: boolean;
-	wrap: boolean;
-	useWorker: boolean;
+	selectionStyle: string;
+	highlightActiveLine: boolean;
+	highlightSelectedWord: boolean;
+	readOnly: boolean;
+	cursorStyle: string;
+	mergeUndoDeltas: boolean;
 	behavioursEnabled: boolean;
 	wrapBehavioursEnabled: boolean;
+	hScrollBarAlwaysVisible: boolean;
+	vScrollBarAlwaysVisible: boolean;
+	highlightGutterLine: boolean;
+	animatedScroll: boolean;
+	showInvisibles: boolean;
+	showPrintMargin: boolean;
+	printMarginColumn: number;
+	printMargin: boolean;
+	fadeFoldWidgets: boolean;
+	showFoldWidgets: boolean;
+	showLineNumbers: boolean;
+	showGutter: boolean;
+	displayIndentGuides: boolean;
+	fontSize: string;
+	scrollPastEnd: number;
+	theme: string;
+	scrollSpeed: number;
+	dragDelay: number;
+	dragEnabled: boolean;
+	focusTimout: number;
+	tooltipFollowsMouse: boolean;
+	firstLineNumber: number;
+	overwrite: boolean;
+	newLineMode: string;
+	useWorker: boolean;
+	useSoftTabs: boolean;
+	tabSize: number;
+	wrap: string;
+	mode: string;
+	enableMultiselect: boolean;
+	enableBasicAutocompletion: boolean;
+	enableLiveAutocompletion: boolean;
+	enableSnippets: boolean;
 }
 
 interface ACE {
 	edit: (e: HTMLElement) => {
 		setOptions: (o: EditorOptions) => void;
 		setOption: (o: string, val: ACE_OPTION) => void;
+		getOptions: () => EditorOptions;
 		getSession: () => {
 			getMode: () => {
 				$id: string;
@@ -216,6 +250,7 @@ interface ACE {
 	};
 	config: {
 		set: (o: string, val: string) => void;
+		setModuleUrl: (name: string, subst: string) => string;
 	};
 	require: (mode: string) => { Mode: any }; /* tslint:disable-line:no-any */
 }

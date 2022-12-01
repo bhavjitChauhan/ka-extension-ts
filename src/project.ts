@@ -1,10 +1,13 @@
+import React, { useRef } from "react";
+import ReactDOM from "react-dom";
+import Button from "@khanacademy/wonder-blocks-button";
 import { Program } from "./types/data";
 import { formatDate } from "./util/text-util";
 import { querySelectorPromise } from "./util/promise-util";
 import { addEditorSettings } from "./editor-settings";
 import { EXTENSION_EDITOR_BUTTON } from "./types/names";
 
-function tableRow (key: string, val: string, title?: string): HTMLTableRowElement {
+function tableRow(key: string, val: string, title?: string): HTMLTableRowElement {
 	const tr = document.createElement("tr");
 
 	const keyElm: HTMLTableDataCellElement = <HTMLTableDataCellElement>document.createElement("td");
@@ -24,7 +27,7 @@ function tableRow (key: string, val: string, title?: string): HTMLTableRowElemen
 	return tr;
 }
 
-function addProgramInfo (program: Program, uok: string): void {
+function addProgramInfo(program: Program, uok: string): void {
 	querySelectorPromise("[data-user-kaid]")
 		.then(userLink => userLink as HTMLAnchorElement)
 		.then(userLink => userLink.parentNode)
@@ -75,7 +78,7 @@ function addProgramInfo (program: Program, uok: string): void {
 		});
 }
 
-function keyboardShortcuts (program: Program): void {
+function keyboardShortcuts(program: Program): void {
 	document.addEventListener("keydown", (e: KeyboardEvent): void => {
 		if (!e.ctrlKey || !e.altKey) { return; }
 		e.preventDefault();
@@ -91,7 +94,7 @@ function keyboardShortcuts (program: Program): void {
 	});
 }
 
-function checkHiddenOrDeleted () {
+function checkHiddenOrDeleted() {
 	const idMatch = window.location.href.split("/")[5].match(/^\d{10,16}/g);
 	if (!idMatch) {
 		return;
@@ -118,7 +121,7 @@ function checkHiddenOrDeleted () {
 }
 
 /*** Add a button to toggle the Editor Settings popup for programs ***/
-async function addEditorSettingsButton () {
+async function addEditorSettingsButton() {
 	const editor = await querySelectorPromise(".scratchpad-ace-editor") as HTMLElement;
 
 	const ace = window.ace;
@@ -130,39 +133,58 @@ async function addEditorSettingsButton () {
 	if (!ace.require("ace/ext/language_tools")) {
 		throw new Error("KA removed ace language tools.");
 	} else {
-		window.ScratchpadAutosuggest.enableLiveCompletion = function () {};
+		window.ScratchpadAutosuggest.enableLiveCompletion = function () { };
 	}
 
-	const innerButtonLink: HTMLButtonElement = document.createElement("button");
-	innerButtonLink.id = EXTENSION_EDITOR_BUTTON;
-	innerButtonLink.innerHTML = "Toggle Editor Settings";
+	// const innerButtonLink: HTMLButtonElement = document.createElement("button");
+	// innerButtonLink.id = EXTENSION_EDITOR_BUTTON;
+	// innerButtonLink.innerHTML = "Toggle Editor Settings";
 
 	const session = ace.edit(editor).getSession();
 	session.setMode(new (ace.require(session.getMode().$id).Mode)());
 
-	const editorSettings = addEditorSettings(innerButtonLink, editor);
+	const { container: editorSettings, onClick } = addEditorSettings(editor)!;
 
-	function repos () {
+	// @TODO: Reimplement this
+	function repos() {
+		const innerButtonLink = document.getElementById(EXTENSION_EDITOR_BUTTON) as HTMLButtonElement;
 		const pos = innerButtonLink.getBoundingClientRect();
+		if (!editorSettings) { return; }
 		editorSettings.style.left = pos.left + pageXOffset + "px";
 		editorSettings.style.top = pos.top + pageYOffset - 10 + "px";
 	}
-	innerButtonLink.addEventListener("click", repos);
+	// // innerButtonLink.
+	// innerButtonLink.addEventListener("click", repos);
 	window.addEventListener("resize", repos);
+
+	const settingsButton = React.createElement(Button, {
+		id: EXTENSION_EDITOR_BUTTON,
+		onClick: () => {
+			onClick();
+			repos();
+		},
+		style: {
+			maxWidth: 200
+		},
+		kind: "secondary",
+	}, "Toggle Settings");
 
 	const errorBuddy = await querySelectorPromise(".error-buddy-resting");
 	const errorBuddyWrap = errorBuddy.parentNode as HTMLDivElement;
 	if (!errorBuddyWrap) {
 		throw new Error("Can't find Error Buddy");
 	}
-	errorBuddyWrap.parentNode!.insertBefore(innerButtonLink, errorBuddyWrap);
+	const settingsButtonNode = document.createElement("div");
+	settingsButtonNode.id = `${EXTENSION_EDITOR_BUTTON}-wrap`;
+	errorBuddyWrap.parentNode!.insertBefore(settingsButtonNode, errorBuddyWrap);
+	ReactDOM.render(settingsButton, settingsButtonNode);
 
-	document.body.appendChild(editorSettings);
+	if (editorSettings) { document.body.appendChild(editorSettings); }
 
 	const editorWrap = document.querySelector(".scratchpad-editor-wrap");
 	if (editorWrap && editorWrap.parentElement) {
 		editorWrap.parentElement.classList.toggle("kae-hidden-editor-wrap", localStorage.kaeEditorHidden === "true" ? true : false);
-	}else {
+	} else {
 		throw new Error("Scratchpad editor has no parent wrap.");
 	}
 }

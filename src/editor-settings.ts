@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { ACE_OPTION, EditorOptions } from "./types/data";
 
 const DEFAULT_SETTINGS = {
@@ -172,7 +173,7 @@ function checkSettingsDark (): boolean {
 
 /* This whole function should probably be refactored at some point,
 	there are more than a few implicit `any`s */
-function addEditorSettings (toggleButton: HTMLElement, editor: HTMLElement) {
+function addEditorSettings (editor: HTMLElement) {
 	if (document.getElementById("kae-toggle-editor-settings")) {
 		return;
 	}
@@ -339,21 +340,31 @@ function addEditorSettings (toggleButton: HTMLElement, editor: HTMLElement) {
 
 	container.style.display = "none";
 
-	toggleButton.addEventListener("click", function () {
+	// toggleButton.addEventListener("click", function () {
+	// 	toggledOn = !toggledOn;
+	// 	if (toggledOn) {
+	// 		container.style.display = "block";
+	// 	} else {
+	// 		container.style.display = "none";
+	// 	}
+	// });
+
+	function onClick() {
+		console.log("click", container.style.display);
 		toggledOn = !toggledOn;
 		if (toggledOn) {
 			container.style.display = "block";
 		} else {
 			container.style.display = "none";
 		}
-	});
+	}
 
 	const mode = aceEditor.getSession().getMode().$id;
 	aceEditor.getSession().setMode(new (window.ace.require(mode).Mode)());
 
 	aceEditor.setOptions(currentOptions);
 
-	return container;
+	return { container, onClick };
 }
 
 export { addEditorSettings, checkSettingsDark };
